@@ -1,3 +1,7 @@
+## Live Demo
+
+🌐 [View SkillSnap live on Azure](https://ca-christoper-portfolio-prod.politesea-922c005b.eastus.azurecontainerapps.io)
+
 # SkillSnap
 
 SkillSnap is a full-stack portfolio application created by **Christoper Chaves
