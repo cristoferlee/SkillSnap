@@ -1,0 +1,101 @@
+@using SkillSnap.Client.Services
+@using SkillSnap.Contracts.Contact
+@inject ContactService ContactService
+
+<section class="contact-inbox"
+         aria-labelledby="contact-inbox-title">
+
+    <header class="inbox-header">
+        <div>
+            <p class="inbox-eyebrow">Contact</p>
+            <h2 id="contact-inbox-title">Messages</h2>
+        </div>
+
+        <button type="button"
+                class="btn btn-sm btn-outline-secondary"
+                disabled="@isLoading"
+                @onclick="LoadMessagesAsync">
+            Refresh
+        </button>
+    </header>
+
+    @if (isLoading)
+    {
+        <p>Loading messages...</p>
+    }
+    else if (!string.IsNullOrWhiteSpace(errorMessage))
+    {
+        <div class="alert alert-danger"
+             role="alert">
+            @errorMessage
+        </div>
+    }
+    else if (messages.Count == 0)
+    {
+        <p class="inbox-empty">
+            No contact messages have been received.
+        </p>
+    }
+    else
+    {
+        <div class="message-list">
+            @foreach (var message in messages)
+            {
+                <article class="message-card"
+                         @key="message.Id">
+
+                    <header>
+                        <div>
+                            <h3>@message.Name</h3>
+
+                            <a href="mailto:@message.Email">
+                                @message.Email
+                            </a>
+                        </div>
+
+                        <time datetime="@message.CreatedAtUtc.ToString("O")">
+                            @(
+                                message.CreatedAtUtc
+                                    .ToLocalTime()
+                                    .ToString("MMM d, yyyy h:mm tt")
+                            )
+                        </time>
+                    </header>
+
+                    <p>@message.Message</p>
+                </article>
+            }
+        </div>
+    }
+</section>
+
+@code {
+    private List<ContactMessageResponse> messages = [];
+    private bool isLoading = true;
+    private string? errorMessage;
+
+    protected override async Task OnInitializedAsync()
+    {
+        await LoadMessagesAsync();
+    }
+
+    private async Task LoadMessagesAsync()
+    {
+        try
+        {
+            isLoading = true;
+            errorMessage = null;
+            messages =
+                await ContactService.GetMessagesAsync();
+        }
+        catch (HttpRequestException)
+        {
+            errorMessage =
+                "Contact messages could not be loaded.";
+        }
+        finally
+        {
+            isLoading = false;
+        }
+    }
+}

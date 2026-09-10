@@ -1,0 +1,61 @@
+location: eastus
+name: ca-christoper-portfolio-prod
+resourceGroup: rg-skillsnap-prod
+type: Microsoft.App/containerApps
+
+identity:
+  type: UserAssigned
+  userAssignedIdentities:
+    /subscriptions/314f1af8-fdb0-4f5c-a0f6-238e6941a442/resourceGroups/rg-skillsnap-prod/providers/Microsoft.ManagedIdentity/userAssignedIdentities/id-skillsnap-acr-pull: {}
+
+properties:
+  managedEnvironmentId: /subscriptions/314f1af8-fdb0-4f5c-a0f6-238e6941a442/resourceGroups/rg-skillsnap-prod/providers/Microsoft.App/managedEnvironments/cae-christoper-portfolio-prod
+
+  configuration:
+    activeRevisionsMode: Single
+    ingress:
+      external: true
+      targetPort: 8080
+      transport: auto
+      allowInsecure: false
+    registries:
+      - server: skillsnapcrregistry.azurecr.io
+        identity: /subscriptions/314f1af8-fdb0-4f5c-a0f6-238e6941a442/resourceGroups/rg-skillsnap-prod/providers/Microsoft.ManagedIdentity/userAssignedIdentities/id-skillsnap-acr-pull
+
+  template:
+    containers:
+      - name: skillsnap
+        image: skillsnapcrregistry.azurecr.io/skillsnap:0.1.0
+        env:
+          - name: ASPNETCORE_ENVIRONMENT
+            value: Production
+          - name: ASPNETCORE_URLS
+            value: http://+:8080
+          - name: ConnectionStrings__SkillSnap
+            value: Data Source=/data/skillsnap.db
+          - name: DataProtection__KeysPath
+            value: /keys
+          - name: Admin__Email
+            secretRef: admin-email
+          - name: Admin__Password
+            secretRef: admin-password
+        resources:
+          cpu: 0.25
+          memory: 0.5Gi
+        volumeMounts:
+          - volumeName: skillsnap-data
+            mountPath: /data
+          - volumeName: skillsnap-keys
+            mountPath: /keys
+
+    scale:
+      minReplicas: 0
+      maxReplicas: 1
+
+    volumes:
+      - name: skillsnap-data
+        storageType: AzureFile
+        storageName: skillsnap-data
+      - name: skillsnap-keys
+        storageType: AzureFile
+        storageName: skillsnap-keys

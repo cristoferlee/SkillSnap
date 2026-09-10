@@ -1,0 +1,99 @@
+.contact-inbox {
+    margin-top: 3rem;
+    padding-top: 2rem;
+    border-top: 1px solid var(--color-border);
+}
+
+.inbox-header {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 1rem;
+    margin-bottom: 1.25rem;
+}
+
+.inbox-header h2 {
+    margin: 0;
+    color: var(--color-ink);
+    font-size: 1.75rem;
+}
+
+.inbox-eyebrow {
+    margin-bottom: 0.2rem;
+    color: var(--color-accent-dark);
+    font-size: 0.72rem;
+    font-weight: 800;
+    letter-spacing: 0.14em;
+    text-transform: uppercase;
+}
+
+.inbox-empty {
+    padding: 1.25rem;
+    border: 1px dashed var(--color-border);
+    border-radius: 0.75rem;
+    color: var(--color-muted);
+    background: #f7f6f2;
+}
+
+.message-list {
+    display: grid;
+    gap: 1rem;
+}
+
+.message-card {
+    padding: 1.25rem;
+    border: 1px solid var(--color-border);
+    border-left: 3px solid var(--color-accent);
+    border-radius: 0.75rem;
+    background: var(--color-surface);
+    box-shadow: 0 0.4rem 1rem rgb(23 32 51 / 6%);
+}
+
+.message-card header {
+    display: flex;
+    align-items: flex-start;
+    justify-content: space-between;
+    gap: 1rem;
+    margin-bottom: 1rem;
+}
+
+.message-card h3 {
+    margin: 0 0 0.2rem;
+    color: var(--color-ink);
+    font-size: 1rem;
+}
+
+.message-card a {
+    color: var(--color-accent-dark);
+    font-size: 0.88rem;
+    text-decoration: none;
+}
+
+.message-card a:hover,
+.message-card a:focus-visible {
+    text-decoration: underline;
+}
+
+.message-card time {
+    flex-shrink: 0;
+    color: var(--color-muted);
+    font-size: 0.78rem;
+}
+
+.message-card p {
+    margin: 0;
+    color: var(--color-ink-soft);
+    line-height: 1.6;
+    white-space: pre-wrap;
+    overflow-wrap: anywhere;
+}
+
+@media (max-width: 600px) {
+    .message-card header {
+        flex-direction: column;
+    }
+
+    .message-card time {
+        order: -1;
+    }
+}

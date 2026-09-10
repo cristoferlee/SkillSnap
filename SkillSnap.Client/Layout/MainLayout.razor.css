@@ -1,0 +1,32 @@
+.page {
+    min-height: 100vh;
+    display: flex;
+    flex-direction: column;
+    background:
+        radial-gradient(circle at 10% 5%, rgba(196, 154, 58, 0.08), transparent 24rem),
+        var(--color-canvas);
+}
+
+main {
+    flex: 1;
+}
+
+.site-header {
+    position: sticky;
+    top: 0;
+    z-index: 1000;
+    box-shadow: 0 4px 18px rgba(17, 24, 39, 0.18);
+}
+
+.content {
+    width: min(100% - 2rem, 1200px);
+    margin: 0 auto;
+    padding: 2rem 0 3rem;
+}
+
+@media (max-width: 640.98px) {
+    .content {
+        width: min(100% - 1.5rem, 1200px);
+        padding-top: 1.25rem;
+    }
+}

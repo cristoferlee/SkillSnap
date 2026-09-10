@@ -1,0 +1,112 @@
+﻿@using SkillSnap.Client.Services
+@inject AuthService AuthService
+@inject UserSessionService UserSession
+@inject NavigationManager NavigationManager
+@implements IDisposable
+
+<nav class="site-nav" aria-label="Main navigation">
+    <div class="nav-container">
+        <a class="brand" href="" @onclick="CloseNavMenu">
+            <span class="brand-mark" aria-hidden="true">S</span>
+            <span>SkillSnap</span>
+        </a>
+
+        <button type="button"
+                class="menu-toggle"
+                title="Toggle navigation"
+                aria-label="Toggle navigation"
+                aria-expanded="@(!collapseNavMenu)"
+                aria-controls="main-navigation"
+                @onclick="ToggleNavMenu">
+            <span></span>
+            <span></span>
+            <span></span>
+        </button>
+
+        <div id="main-navigation" class="@NavMenuCssClass">
+            <NavLink class="nav-link"
+                     href="projects"
+                     @onclick="CloseNavMenu">
+                Projects
+            </NavLink>
+
+            @if (AuthService.IsAuthenticated)
+            {
+                @if (string.Equals(
+                    UserSession.Role,
+                    "Admin",
+                    StringComparison.OrdinalIgnoreCase))
+                {
+                    <NavLink class="nav-link admin-link"
+                             href="admin"
+                             @onclick="CloseNavMenu">
+                        Admin
+                    </NavLink>
+                }
+
+                <span class="account-email" title="Signed-in account">
+                    @UserSession.Email
+                </span>
+
+                <button type="button"
+                        class="logout-button"
+                        @onclick="LogoutAsync">
+                    Logout
+                </button>
+            }
+        </div>
+    </div>
+</nav>
+
+@code {
+    private bool collapseNavMenu = true;
+
+    private string? NavMenuCssClass =>
+        collapseNavMenu ? "nav-links" : "nav-links is-open";
+
+    protected override void OnInitialized()
+    {
+        AuthService.AuthenticationChanged +=
+            HandleAuthenticationChanged;
+
+        UserSession.StateChanged +=
+            HandleSessionChanged;
+    }
+
+    private void ToggleNavMenu()
+    {
+        collapseNavMenu = !collapseNavMenu;
+    }
+
+    private void CloseNavMenu()
+    {
+        collapseNavMenu = true;
+    }
+
+    private async Task LogoutAsync()
+    {
+        await AuthService.LogoutAsync();
+
+        collapseNavMenu = true;
+        NavigationManager.NavigateTo("/");
+    }
+
+    private void HandleAuthenticationChanged()
+    {
+        _ = InvokeAsync(StateHasChanged);
+    }
+
+    private void HandleSessionChanged()
+    {
+        _ = InvokeAsync(StateHasChanged);
+    }
+
+    public void Dispose()
+    {
+        AuthService.AuthenticationChanged -=
+            HandleAuthenticationChanged;
+
+        UserSession.StateChanged -=
+            HandleSessionChanged;
+    }
+}

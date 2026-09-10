@@ -1,0 +1,81 @@
+<section id="about" class="profile-card" aria-labelledby="profile-name">
+    <div class="profile-main">
+        <div class="profile-introduction">
+            <p class="eyebrow">Hello, I'm</p>
+
+            <h1 id="profile-name">@Name</h1>
+
+            <p class="professional-title">
+                @ProfessionalTitle
+            </p>
+
+            <p class="profile-summary">
+                @Bio
+            </p>
+
+            <div class="profile-actions">
+                <a class="primary-action" href="projects">
+                    View projects
+                </a>
+
+                <ContactForm />
+            </div>
+        </div>
+
+        <div class="profile-portrait">
+            <div class="portrait-frame">
+                <img class="portrait-image"
+                    src="images/christoper-chaves-lee-profile.webp"
+                    alt="Portrait of Christoper Chaves Lee"
+                    width="640"
+                    height="800"
+                    loading="eager"
+                    fetchpriority="high"
+                    decoding="async" />
+
+                <div class="portrait-accent" aria-hidden="true"></div>
+            </div>
+        </div>
+
+        <div class="profile-stack" aria-labelledby="stack-heading">
+            <p class="eyebrow">Technical profile</p>
+            <h2 id="stack-heading">Full-stack foundations</h2>
+
+            <dl class="stack-list">
+                <div>
+                    <dt>Backend</dt>
+                    <dd>C#, ASP.NET Core, REST APIs, Identity</dd>
+                </div>
+
+                <div>
+                    <dt>Frontend</dt>
+                    <dd>Blazor WebAssembly, HTML5, CSS3, Bootstrap</dd>
+                </div>
+
+                <div>
+                    <dt>Data &amp; quality</dt>
+                    <dd>EF Core, SQLServer, LINQ, xUnit</dd>
+                </div>
+                <div>
+                    <dt>Cloud &amp; DevOps</dt>
+                    <dd>Azure, Docker, CI/CD, Git, GitHub</dd>
+                </div>
+            </dl>
+        </div>
+    </div>
+</section>
+
+@code {
+    [Parameter]
+    public string Name { get; set; } =
+        "Christoper Chaves Lee";
+
+    [Parameter]
+    public string ProfessionalTitle { get; set; } =
+        ".NET Full-Stack Developer";
+
+    [Parameter]
+    public string Bio { get; set; } =
+        "I build secure, maintainable web applications with ASP.NET Core, Blazor, and clear API boundaries.";
+
+}

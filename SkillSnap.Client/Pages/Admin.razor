@@ -1,0 +1,35 @@
+@page "/admin"
+@using SkillSnap.Client.Services
+@inject AuthService AuthService
+@inject NavigationManager NavigationManager
+
+<PageTitle>Portfolio management - SkillSnap</PageTitle>
+
+@if (AuthService.IsInRole("Admin"))
+{
+    <h1>Portfolio management</h1>
+
+    <p class="text-muted">
+        Manage the content displayed on the public portfolio.
+    </p>
+
+    <ProjectList ShowAdminControls="true" />
+    <SkillTags ShowAdminControls="true" />
+    <ContactInbox />
+}
+else
+{
+    <p>Redirecting to administrator sign in...</p>
+}
+
+@code {
+    protected override void OnInitialized()
+    {
+        if (!AuthService.IsInRole("Admin"))
+        {
+            NavigationManager.NavigateTo(
+                "/admin/login",
+                replace: true);
+        }
+    }
+}

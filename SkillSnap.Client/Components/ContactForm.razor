@@ -1,0 +1,228 @@
+@using System.Net
+@using SkillSnap.Client.Services
+@using SkillSnap.Contracts.Contact
+@inject ContactService ContactService
+
+<button type="button"
+        class="contact-trigger @(Compact ? "compact" : null)"
+        @ref="triggerButton"
+        @onclick="Open"
+        @onkeydown="HandleKeyDown">
+    @ButtonText
+</button>
+
+@if (isOpen)
+{
+    <div class="contact-overlay"
+         @onclick="Close">
+
+        <section class="contact-dialog"
+                 role="dialog"
+                 aria-modal="true"
+                 aria-labelledby="contact-dialog-title"
+                 @onclick:stopPropagation="true"
+                 @onkeydown="HandleKeyDown">
+
+            <button type="button"
+                    class="contact-close"
+                    aria-label="Close contact form"
+                    disabled="@isSubmitting"
+                    @onclick="Close">
+                ×
+            </button>
+
+            @if (isSubmitted)
+            {
+                <div class="contact-success"
+                     role="status">
+                    <p class="contact-eyebrow">Message received</p>
+                    <h2 id="contact-dialog-title">Thank you</h2>
+                    <p>
+                        Your message was sent successfully.
+                        I will respond as soon as possible.
+                    </p>
+
+                    <button type="button"
+                            class="contact-primary"
+                            @onclick="Close">
+                        Close
+                    </button>
+                </div>
+            }
+            else
+            {
+                <header class="contact-header">
+                    <p class="contact-eyebrow">Let's connect</p>
+                    <h2 id="contact-dialog-title">Send a message</h2>
+                    <p>
+                        Tell me about the opportunity or project
+                        you would like to discuss.
+                    </p>
+                </header>
+
+                <EditForm Model="contact"
+                          OnValidSubmit="SubmitAsync">
+
+                    <DataAnnotationsValidator />
+
+                    <div class="contact-field">
+                        <label for="contact-name">
+                            Name
+                        </label>
+
+                        <InputText id="contact-name"
+                                   class="form-control"
+                                   autocomplete="name"
+                                   autofocus
+                                   @bind-Value="contact.Name" />
+
+                        <ValidationMessage
+                            For="() => contact.Name" />
+                    </div>
+
+                    <div class="contact-field">
+                        <label for="contact-email">
+                            Email
+                        </label>
+
+                        <InputText id="contact-email"
+                                   class="form-control"
+                                   type="email"
+                                   autocomplete="email"
+                                   @bind-Value="contact.Email" />
+
+                        <ValidationMessage
+                            For="() => contact.Email" />
+                    </div>
+
+                    <div class="contact-field">
+                        <label for="contact-message">
+                            Message
+                        </label>
+
+                        <InputTextArea id="contact-message"
+                                       class="form-control"
+                                       rows="5"
+                                       @bind-Value="contact.Message" />
+
+                        <ValidationMessage
+                            For="() => contact.Message" />
+                    </div>
+
+                    <div class="contact-honeypot"
+                         aria-hidden="true">
+                        <label for="contact-website">
+                            Website
+                        </label>
+
+                        <InputText id="contact-website"
+                                   tabindex="-1"
+                                   autocomplete="off"
+                                   @bind-Value="contact.Website" />
+                    </div>
+
+                    @if (!string.IsNullOrWhiteSpace(errorMessage))
+                    {
+                        <p class="contact-error"
+                           role="alert">
+                            @errorMessage
+                        </p>
+                    }
+
+                    <button type="submit"
+                            class="contact-primary"
+                            disabled="@isSubmitting">
+
+                        @(isSubmitting
+                            ? "Sending..."
+                            : "Send message")
+                    </button>
+                </EditForm>
+            }
+        </section>
+    </div>
+}
+
+@code {
+    [Parameter]
+    public string ButtonText { get; set; } = "Contact me";
+
+    [Parameter]
+    public bool Compact { get; set; }
+
+    private CreateContactMessageRequest contact = new();
+    private ElementReference triggerButton;
+    private bool isOpen;
+    private bool isSubmitting;
+    private bool isSubmitted;
+    private bool restoreFocusAfterClose;
+    private string? errorMessage;
+
+    private void Open()
+    {
+        isOpen = true;
+        isSubmitted = false;
+        errorMessage = null;
+    }
+
+    private void Close()
+    {
+        if (isSubmitting)
+        {
+            return;
+        }
+
+        isOpen = false;
+        restoreFocusAfterClose = true;
+    }
+
+    protected override async Task OnAfterRenderAsync(bool firstRender)
+    {
+        if (!restoreFocusAfterClose)
+        {
+            return;
+        }
+
+        restoreFocusAfterClose = false;
+        await triggerButton.FocusAsync();
+    }
+
+    private async Task SubmitAsync()
+    {
+        try
+        {
+            isSubmitting = true;
+            errorMessage = null;
+
+            await ContactService.SubmitAsync(contact);
+
+            contact = new CreateContactMessageRequest();
+            isSubmitted = true;
+        }
+        catch (HttpRequestException exception)
+            when (exception.StatusCode ==
+                HttpStatusCode.TooManyRequests)
+        {
+            errorMessage =
+                "Too many attempts. Please try again in a few minutes.";
+        }
+        catch (HttpRequestException)
+        {
+            errorMessage =
+                "Your message could not be sent. Please try again.";
+        }
+        finally
+        {
+            isSubmitting = false;
+        }
+    }
+
+    private void HandleKeyDown(KeyboardEventArgs args)
+    {
+        if (args.Key == "Escape")
+        {
+            Close();
+        }
+    }
+
+}

@@ -1,0 +1,12 @@
+<Solution>
+  <Project Path="SkillSnap.Contracts/SkillSnap.Contracts.csproj"/>
+  <Project Path="SkillSnap.Api.Tests/SkillSnap.Api.Tests.csproj"/>
+  <Project Path="SkillSnap.Api/SkillSnap.Api.csproj"/>
+  <Project Path="SkillSnap.Client/SkillSnap.Client.csproj"/>
+  <Folder Name="/Solution Items/">
+    <File Path=".env.example"/>
+    <File Path="compose.yaml"/>
+    <File Path=".env"/>
+    <File Path="containerapp.yaml"/>
+  </Folder>
+</Solution>

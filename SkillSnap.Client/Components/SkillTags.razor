@@ -1,0 +1,296 @@
+@using SkillSnap.Client.Models
+@using SkillSnap.Client.Services
+@inject SkillService SkillService
+@inject AuthService AuthService
+@inject IJSRuntime JSRuntime
+@implements IDisposable
+
+<section class="mb-5">
+    <h2>Skills</h2>
+
+    @if (isLoading)
+    {
+        <p>Loading skills...</p>
+    }
+    else if (!string.IsNullOrEmpty(errorMessage))
+    {
+        <div class="alert alert-danger">
+            @errorMessage
+        </div>
+    }
+    else if (skills.Count == 0)
+    {
+        <p>No skills are available.</p>
+    }
+    else
+    {
+        <div class="d-flex flex-column gap-2">
+            @foreach (var skill in skills)
+            {
+                <div class="d-flex align-items-center gap-2"
+                     @key="skill.Id">
+
+                    <span class="badge text-bg-primary">
+                        @skill.Name
+                    </span>
+
+                    @if (ShowAdminControls &&
+                        AuthService.IsInRole("Admin"))
+                    {
+                        <button type="button"
+                                class="btn btn-sm btn-outline-secondary"
+                                disabled="@isSaving"
+                                @onclick="() => BeginEdit(skill)">
+
+                            Edit
+                        </button>
+
+                        <button type="button"
+                                class="btn btn-sm btn-outline-danger"
+                                disabled="@isSaving"
+                                @onclick="() => DeleteSkillAsync(skill)">
+
+                            Delete
+                        </button>
+                    }
+                </div>
+            }
+        </div>
+    }
+
+    @if (ShowAdminControls &&
+        AuthService.IsInRole("Admin"))
+    {
+        @if (editingSkill is not null)
+        {
+            <h3 class="h5 mt-4">Edit skill</h3>
+
+            <EditForm Model="editingSkill"
+                      OnValidSubmit="UpdateSkillAsync">
+
+                <DataAnnotationsValidator />
+
+                <div class="mb-2">
+                    <label for="edit-skill-name"
+                           class="form-label">
+                        Name
+                    </label>
+
+                    <InputText id="edit-skill-name"
+                               class="form-control"
+                               @bind-Value="editingSkill.Name" />
+
+                    <ValidationMessage
+                        For="() => editingSkill.Name" />
+                </div>
+
+                <div class="d-flex gap-2">
+                    <button type="submit"
+                            class="btn btn-primary"
+                            disabled="@isSaving">
+
+                        @(isSaving ? "Saving..." : "Save changes")
+                    </button>
+
+                    <button type="button"
+                            class="btn btn-secondary"
+                            disabled="@isSaving"
+                            @onclick="CancelEdit">
+
+                        Cancel
+                    </button>
+                </div>
+            </EditForm>
+        }
+        else
+        {
+            <h3 class="h5 mt-4">Add a skill</h3>
+
+            <EditForm Model="newSkill"
+                      OnValidSubmit="AddSkillAsync">
+
+                <DataAnnotationsValidator />
+
+                <div class="mb-2">
+                    <label for="skill-name"
+                           class="form-label">
+                        Name
+                    </label>
+
+                    <InputText id="skill-name"
+                               class="form-control"
+                               @bind-Value="newSkill.Name" />
+
+                    <ValidationMessage
+                        For="() => newSkill.Name" />
+                </div>
+
+                <button type="submit"
+                        class="btn btn-primary"
+                        disabled="@isSaving">
+
+                    @(isSaving ? "Adding..." : "Add skill")
+                </button>
+            </EditForm>
+        }
+    }
+</section>
+
+@code {
+    [Parameter]
+    public bool ShowAdminControls { get; set; }
+    private List<Skill> skills = [];
+    private Skill newSkill = CreateEmptySkill();
+    private Skill? editingSkill;
+    private bool isLoading = true;
+    private bool isSaving;
+    private string? errorMessage;
+
+    protected override async Task OnInitializedAsync()
+    {
+        AuthService.AuthenticationChanged +=
+            HandleAuthenticationChanged;
+
+        await LoadSkillsAsync();
+    }
+
+    private async Task LoadSkillsAsync()
+    {
+        try
+        {
+            errorMessage = null;
+            skills = await SkillService.GetSkillsAsync();
+        }
+        catch (HttpRequestException)
+        {
+            errorMessage = "Skills could not be loaded.";
+        }
+        finally
+        {
+            isLoading = false;
+        }
+    }
+
+    private async Task AddSkillAsync()
+    {
+        try
+        {
+            isSaving = true;
+            errorMessage = null;
+
+            await SkillService.AddSkillAsync(newSkill);
+
+            newSkill = CreateEmptySkill();
+            await LoadSkillsAsync();
+        }
+        catch (HttpRequestException)
+        {
+            errorMessage = "The skill could not be added.";
+        }
+        finally
+        {
+            isSaving = false;
+        }
+    }
+
+    private void BeginEdit(Skill skill)
+    {
+        editingSkill = new Skill
+        {
+            Id = skill.Id,
+            Name = skill.Name
+        };
+
+        errorMessage = null;
+    }
+
+    private void CancelEdit()
+    {
+        editingSkill = null;
+    }
+
+    private async Task UpdateSkillAsync()
+    {
+        if (editingSkill is null)
+        {
+            return;
+        }
+
+        try
+        {
+            isSaving = true;
+            errorMessage = null;
+
+            await SkillService.UpdateSkillAsync(
+                editingSkill);
+
+            editingSkill = null;
+            await LoadSkillsAsync();
+        }
+        catch (HttpRequestException)
+        {
+            errorMessage = "The skill could not be updated.";
+        }
+        finally
+        {
+            isSaving = false;
+        }
+    }
+
+    private async Task DeleteSkillAsync(Skill skill)
+    {
+        var confirmed =
+            await JSRuntime.InvokeAsync<bool>(
+                "confirm",
+                $"Delete the skill '{skill.Name}'?");
+
+        if (!confirmed)
+        {
+            return;
+        }
+
+        try
+        {
+            isSaving = true;
+            errorMessage = null;
+
+            await SkillService.DeleteSkillAsync(skill.Id);
+
+            if (editingSkill?.Id == skill.Id)
+            {
+                editingSkill = null;
+            }
+
+            await LoadSkillsAsync();
+        }
+        catch (HttpRequestException)
+        {
+            errorMessage = "The skill could not be deleted.";
+        }
+        finally
+        {
+            isSaving = false;
+        }
+    }
+
+    private static Skill CreateEmptySkill()
+    {
+        return new Skill();
+    }
+
+    private void HandleAuthenticationChanged()
+    {
+        if (!AuthService.IsAuthenticated)
+        {
+            editingSkill = null;
+        }
+
+        _ = InvokeAsync(StateHasChanged);
+    }
+
+    public void Dispose()
+    {
+        AuthService.AuthenticationChanged -=
+            HandleAuthenticationChanged;
+    }
+}

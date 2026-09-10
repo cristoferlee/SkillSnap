@@ -1,0 +1,17 @@
+services:
+  api:
+    image: skillsnap-api:local
+    build:
+      context: .
+      dockerfile: SkillSnap.Api/Dockerfile
+    ports:
+      - "8080:8080"
+    env_file:
+      - .env
+    volumes:
+      - skillsnap-data:/data
+      - skillsnap-keys:/keys
+
+volumes:
+  skillsnap-data:
+  skillsnap-keys:
